@@ -1,0 +1,29 @@
+<repo>
+	<footerlinks>
+		<link>
+			<name>Follow me on Twitter</name>
+			<url>https://twitter.com/Ahmad4maylod</url>
+			<iconclass>fa fa-twitter</iconclass>
+		</link>
+		<link>
+			<name>Subscribe to my youtube channel</name>
+			<url>https:https://www.youtube.com/c/ahmad4maylodc</url>
+			<iconclass>fa fa-youtube</iconclass>
+	      	</link>
+<link>
+			<name>Follow Me On TikTok</name>
+			<url>hhttps://www.tiktok.com/@ah4mls</url>
+			<iconclass>fa fa-tiktok</iconclass>
+		</link>
+<link>
+			<name>Buy Me A Coffee</name>
+			<url>https://www.buymeacoffee.com/ahmad4maylod</url>
+			<iconclass>fa fa-buymeacoffee</iconclass>
+		</link>
+                <link>
+			<name>Donate</name>
+			<url>https://paypal.me/Ahmad4MayLod</url>
+			<iconclass>fa fa-paypal</iconclass>
+		</link>
+	</footerlinks>
+</repo>
