@@ -5,46 +5,260 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tài Xỉu - Dice Game</title>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #1e3c72, #2a5298);
       color: white;
       text-align: center;
-      margin: 0;
+      min-height: 100vh;
       padding: 20px;
     }
     .container {
       max-width: 650px;
       margin: 0 auto;
-      background: rgba(0,0,0,0.45);
+      background: rgba(0,0,0,0.5);
       padding: 25px;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.6);
     }
-    h1 { margin: 10px 0; color: #ffd700; }
+    h1 { 
+      margin: 10px 0 15px; 
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
     
     .player-info {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.15);
       padding: 12px;
       border-radius: 12px;
       margin: 15px 0;
-      font-size: 18px;
+      font-size: 17px;
     }
     .rank-badge {
-      display: inline-block;
-      padding: 5px 15px;
       background: #ffd700;
       color: black;
+      padding: 4px 14px;
       border-radius: 20px;
       font-weight: bold;
-      margin-left: 10px;
+      margin-left: 8px;
     }
 
     .dice-container {
       display: flex;
       justify-content: center;
-      gap: 20px;
-      margin: 30px 0;
+      gap: 25px;
+      margin: 35px 0;
     }
     .die {
-      width:
+      width: 85px;
+      height: 85px;
+      background: white;
+      color: black;
+      font-size: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+      transition: transform 0.6s;
+    }
+
+    .result { 
+      font-size: 26px; 
+      margin: 20px 0; 
+      font-weight: bold;
+      min-height: 40px;
+    }
+    .tai { color: #00ff88; text-shadow: 0 0 8px #00ff88; }
+    .xiu { color: #ff4444; text-shadow: 0 0 8px #ff4444; }
+
+    button {
+      padding: 12px 26px;
+      font-size: 17px;
+      margin: 6px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .roll-btn {
+      background: #ffd700;
+      color: black;
+      font-size: 19px;
+    }
+
+    .leaderboard {
+      margin-top: 30px;
+      background: rgba(0,0,0,0.4);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: left;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎲 TÀI XỈU</h1>
+
+    <div class="player-info">
+      <strong id="player-name">Người Chơi</strong> 
+      <span class="rank-badge" id="rank-badge">Newbie</span><br><br>
+      Số dư: <strong id="balance">500000</strong> VNĐ &nbsp; | &nbsp;
+      Thắng: <strong id="wins">0</strong> &nbsp; | &nbsp;
+      Thua: <strong id="losses">0</strong>
+    </div>
+
+    <input type="text" id="name-input" placeholder="Nhập tên của bạn" 
+           style="padding:10px; width:260px; border-radius:8px; border:none; margin-bottom:8px;">
+    <button onclick="changeName()">Đổi Tên</button>
+
+    <div class="dice-container">
+      <div class="die" id="die1">⚀</div>
+      <div class="die" id="die2">⚀</div>
+      <div class="die" id="die3">⚀</div>
+    </div>
+
+    <div class="result" id="result">Nhấn nút Lắc Xúc Xắc để chơi</div>
+
+    <button class="roll-btn" onclick="rollDice()">🎲 LẮC XÚC XẮC</button>
+
+    <div style="margin:25px 0;">
+      <button onclick="placeBet('tai', 50000)" style="background:#00cc00;color:white;">TÀI 50k</button>
+      <button onclick="placeBet('tai', 100000)" style="background:#00cc00;color:white;">TÀI 100k</button>
+      <button onclick="placeBet('xiu', 50000)" style="background:#ff3333;color:white;">XỈU 50k</button>
+      <button onclick="placeBet('xiu', 100000)" style="background:#ff3333;color:white;">XỈU 100k</button>
+    </div>
+
+    <div id="bet-status" style="min-height:30px;font-weight:bold;color:#ff0;"></div>
+
+    <div class="leaderboard">
+      <h3>🏆 Bảng Xếp Hạng</h3>
+      <div id="leaderboard"></div>
+    </div>
+  </div>
+
+  <script>
+    let player = { name: "Người Chơi", balance: 500000, wins: 0, losses: 0 };
+    let currentBet = 0, betType = null;
+
+    const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+    function loadData() {
+      const saved = localStorage.getItem('taixiu_player');
+      if (saved) player = JSON.parse(saved);
+      updateUI();
+    }
+
+    function saveData() {
+      localStorage.setItem('taixiu_player', JSON.stringify(player));
+    }
+
+    function updateUI() {
+      document.getElementById('player-name').textContent = player.name;
+      document.getElementById('balance').textContent = player.balance.toLocaleString();
+      document.getElementById('wins').textContent = player.wins;
+      document.getElementById('losses').textContent = player.losses;
+
+      let rank = "Newbie";
+      if (player.balance >= 2000000) rank = "👑 Master";
+      else if (player.balance >= 1000000) rank = "🔥 Pro";
+      else if (player.balance >= 500000) rank = "⭐ Player";
+      document.getElementById('rank-badge').textContent = rank;
+    }
+
+    function changeName() {
+      const name = document.getElementById('name-input').value.trim();
+      if (name) {
+        player.name = name;
+        updateUI();
+        saveData();
+      }
+    }
+
+    function getRandomDie() { return Math.floor(Math.random() * 6) + 1; }
+
+    function rollDice() {
+      const dies = [
+        document.getElementById('die1'),
+        document.getElementById('die2'),
+        document.getElementById('die3')
+      ];
+      const resultDiv = document.getElementById('result');
+      const betStatus = document.getElementById('bet-status');
+
+      // Animation
+      dies.forEach(d => d.style.transform = 'rotate(720deg)');
+
+      setTimeout(() => {
+        const d1 = getRandomDie(), d2 = getRandomDie(), d3 = getRandomDie();
+        const sum = d1 + d2 + d3;
+
+        dies[0].textContent = diceFaces[d1-1];
+        dies[1].textContent = diceFaces[d2-1];
+        dies[2].textContent = diceFaces[d3-1];
+
+        const isTai = sum >= 11;
+        resultDiv.innerHTML = `${d1} + ${d2} + ${d3} = ${sum} ${isTai ? 
+          '<span class="tai">TÀI</span>' : '<span class="xiu">XỈU</span>'}`;
+
+        if (currentBet > 0 && betType) {
+          if ((betType === 'tai' && isTai) || (betType === 'xiu' && !isTai)) {
+            player.balance += currentBet * 2;
+            player.wins++;
+            betStatus.innerHTML = `✅ Thắng ${currentBet.toLocaleString()}đ`;
+          } else {
+            player.balance -= currentBet;
+            player.losses++;
+            betStatus.innerHTML = `❌ Thua ${currentBet.toLocaleString()}đ`;
+          }
+          currentBet = 0;
+          betType = null;
+          saveData();
+          updateUI();
+        }
+      }, 650);
+    }
+
+    function placeBet(type, amount) {
+      if (player.balance < amount) {
+        alert("Không đủ tiền cược!");
+        return;
+      }
+      currentBet = amount;
+      betType = type;
+      document.getElementById('bet-status').innerHTML = 
+        `Đã cược <b>${amount.toLocaleString()}đ</b> vào <b>${type.toUpperCase()}</b>`;
+    }
+
+    // Leaderboard
+    function updateLeaderboard() {
+      let lb = JSON.parse(localStorage.getItem('taixiu_leaderboard')) || [];
+      const idx = lb.findIndex(p => p.name === player.name);
+      
+      if (idx >= 0) lb[idx] = {...player};
+      else lb.push({...player});
+
+      lb.sort((a,b) => b.balance - a.balance);
+      lb = lb.slice(0, 10);
+
+      localStorage.setItem('taixiu_leaderboard', JSON.stringify(lb));
+
+      let html = '';
+      lb.forEach((p, i) => {
+        html += `<div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1);">
+          <b>#${i+1}</b> ${p.name} <span style="float:right;color:#ffd700">${p.balance.toLocaleString()}đ</span>
+        </div>`;
+      });
+      document.getElementById('leaderboard').innerHTML = html;
+    }
+
+    window.onload = () => {
+      loadData();
+      updateLeaderboard();
+    };
+  </script>
+</body>
+</html>
